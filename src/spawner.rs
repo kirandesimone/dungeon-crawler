@@ -14,8 +14,8 @@ pub fn spawn_player(world: &mut World, pos: Point) {
             glyph: to_cp437('@'),
         },
         Health {
-            current: 20,
-            max: 20,
+            current: 10,
+            max: 10,
         },
     ));
 }
@@ -36,7 +36,7 @@ pub fn spawn_enemy(world: &mut World, pos: Point, rng: &mut RandomNumberGenerato
     world.push((
         Enemy,
         pos,
-        MoveRandomly,
+        ChasingPlayer,
         Render {
             color: ColorPair::new(WHITE, BLACK),
             glyph,
@@ -46,5 +46,18 @@ pub fn spawn_enemy(world: &mut World, pos: Point, rng: &mut RandomNumberGenerato
             max: hp,
         },
         Name(name),
+    ));
+}
+
+pub fn spawn_amulet_yala(world: &mut World, pos: Point) {
+    world.push((
+        Item,
+        AmuletOfYala,
+        pos,
+        Render {
+            color: ColorPair::new(WHITE, BLACK),
+            glyph: to_cp437('|'),
+        },
+        Name("Amulet of YALA".to_string()),
     ));
 }
