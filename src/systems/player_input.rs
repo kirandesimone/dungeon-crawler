@@ -18,7 +18,7 @@ pub fn player_input(
             VirtualKeyCode::D => Point::new(1, 0),
             VirtualKeyCode::S => Point::new(0, 1),
             VirtualKeyCode::A => Point::new(-1, 0),
-            _ => Point::zero()
+            _ => Point::zero(),
         };
 
         let (player_entity, destination) = players

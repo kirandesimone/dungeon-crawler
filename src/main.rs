@@ -55,6 +55,8 @@ impl GameState for State {
             TurnState::EnemyTurn => self
                 .enemy_schedule
                 .execute(&mut self.world, &mut self.resources),
+            TurnState::GameOver => self.game_over(ctx),
+            TurnState::Victory => self.victory(ctx),
         };
         render_draw_buffer(ctx).expect("Render Error");
     }
@@ -67,6 +69,7 @@ impl State {
         let mut rng = RandomNumberGenerator::new();
         let mb = MapBuilder::new(&mut rng);
         spawn_player(&mut world, mb.player_start);
+        spawn_amulet_yala(&mut world, mb.amulet_start);
         mb.rooms.iter().skip(1).map(|r| r.center()).for_each(|pos| {
             spawn_enemy(&mut world, pos, &mut rng);
         });
@@ -79,6 +82,47 @@ impl State {
             input_schedule: build_input_scheduler(),
             player_schedule: build_player_scheduler(),
             enemy_schedule: build_enemy_scheduler(),
+        }
+    }
+
+    fn reset(&mut self) {
+        self.world = World::default();
+        self.resources = Resources::default();
+        let mut rng = RandomNumberGenerator::new();
+        let map_builder = MapBuilder::new(&mut rng);
+        spawn_player(&mut self.world, map_builder.player_start);
+        spawn_amulet_yala(&mut self.world, map_builder.amulet_start);
+        map_builder
+            .rooms
+            .iter()
+            .skip(1)
+            .map(|room| room.center())
+            .for_each(|room_center| {
+                spawn_enemy(&mut self.world, room_center, &mut rng);
+            });
+        self.resources.insert(map_builder.map);
+        self.resources.insert(Camera::new(map_builder.player_start));
+        self.resources.insert(TurnState::AwaitingInput);
+    }
+
+    fn game_over(&mut self, ctx: &mut BTerm) {
+        ctx.set_active_console(2);
+        ctx.print_color_centered(2, RED, BLACK, "GAME OVER");
+        ctx.print_color_centered(4, WHITE, BLACK, "Slain by a monster");
+        ctx.print_color_centered(5, WHITE, BLACK, "The amulet was not recovered");
+        ctx.print_color_centered(9, GREEN, BLACK, "Press 1 to Play Again");
+        if let Some(VirtualKeyCode::Key1) = ctx.key {
+            self.reset();
+        }
+    }
+
+    fn victory(&mut self, ctx: &mut BTerm) {
+        ctx.set_active_console(2);
+        ctx.print_color_centered(2, GREEN, BLACK, "VICTOY");
+        ctx.print_color_centered(4, WHITE, BLACK, "You have found the Amulet of Yala");
+        ctx.print_color_centered(9, GREEN, BLACK, "Press 1 to Play Again");
+        if let Some(VirtualKeyCode::Key1) = ctx.key {
+            self.reset();
         }
     }
 }

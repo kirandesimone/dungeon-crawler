@@ -34,3 +34,12 @@ pub struct WantsToAttack {
     pub attacker: Entity,
     pub victim: Entity,
 }
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct ChasingPlayer;
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Item;
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct AmuletOfYala;
