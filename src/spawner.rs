@@ -17,6 +17,7 @@ pub fn spawn_player(world: &mut World, pos: Point) {
             current: 10,
             max: 10,
         },
+        FieldOfView::new(8),
     ));
 }
 
@@ -46,6 +47,7 @@ pub fn spawn_enemy(world: &mut World, pos: Point, rng: &mut RandomNumberGenerato
             max: hp,
         },
         Name(name),
+        FieldOfView::new(6),
     ));
 }
 
