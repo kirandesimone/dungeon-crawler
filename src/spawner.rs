@@ -70,12 +70,10 @@ pub fn spawn_healing_potion(world: &mut World, pos: Point) {
         pos,
         Render {
             color: ColorPair::new(WHITE, BLACK),
-            glyph: to_cp437('!')
+            glyph: to_cp437('!'),
         },
         Name("Health Potion".to_string()),
-        ProvidesHealing {
-            amount: 6
-        }
+        ProvidesHealing { amount: 6 },
     ));
 }
 
@@ -85,9 +83,9 @@ pub fn spawn_dungeon_map(world: &mut World, pos: Point) {
         pos,
         Render {
             color: ColorPair::new(WHITE, BLACK),
-            glyph: to_cp437('{')
+            glyph: to_cp437('{'),
         },
         Name("Dungeon Map".to_string()),
-        ProvidesDungeonMap
+        ProvidesDungeonMap,
     ));
 }
