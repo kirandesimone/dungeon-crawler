@@ -67,15 +67,20 @@ impl State {
         let mut world = World::default();
         let mut resources = Resources::default();
         let mut rng = RandomNumberGenerator::new();
-        let mb = MapBuilder::new(&mut rng);
-        spawn_player(&mut world, mb.player_start);
-        spawn_amulet_yala(&mut world, mb.amulet_start);
-        mb.rooms.iter().skip(1).map(|r| r.center()).for_each(|pos| {
+        let map_builder = MapBuilder::new(&mut rng);
+        spawn_player(&mut world, map_builder.player_start);
+        spawn_amulet_yala(&mut world, map_builder.amulet_start);
+        map_builder
+            .monster_spawn
+            .iter()
+            .for_each(|pos| spawn_enemy(&mut world, *pos, &mut rng));
+        /*  map_builder.rooms.iter().skip(1).map(|r| r.center()).for_each(|pos| {
             spawn_enemy(&mut world, pos, &mut rng);
-        });
-        resources.insert(mb.map);
-        resources.insert(Camera::new(mb.player_start));
+        }); */
+        resources.insert(map_builder.map);
+        resources.insert(Camera::new(map_builder.player_start));
         resources.insert(TurnState::AwaitingInput);
+        resources.insert(map_builder.theme);
         Self {
             world,
             resources,
@@ -93,16 +98,21 @@ impl State {
         spawn_player(&mut self.world, map_builder.player_start);
         spawn_amulet_yala(&mut self.world, map_builder.amulet_start);
         map_builder
-            .rooms
+            .monster_spawn
             .iter()
-            .skip(1)
-            .map(|room| room.center())
-            .for_each(|room_center| {
-                spawn_enemy(&mut self.world, room_center, &mut rng);
-            });
+            .for_each(|pos| spawn_enemy(&mut self.world, *pos, &mut rng));
+        /*  map_builder
+        .rooms
+        .iter()
+        .skip(1)
+        .map(|room| room.center())
+        .for_each(|room_center| {
+            spawn_enemy(&mut self.world, room_center, &mut rng);
+        }); */
         self.resources.insert(map_builder.map);
         self.resources.insert(Camera::new(map_builder.player_start));
         self.resources.insert(TurnState::AwaitingInput);
+        self.resources.insert(map_builder.theme);
     }
 
     fn game_over(&mut self, ctx: &mut BTerm) {
