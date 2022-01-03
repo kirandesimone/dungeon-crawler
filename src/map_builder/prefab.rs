@@ -1,0 +1,84 @@
+use crate::prelude::*;
+
+const FORTRESS: (&str, i32, i32) = (
+    "
+------------
+---######---
+---#----#---
+---#-M--#---
+-###----###-
+--M------M--
+-###----###-
+---#----#---
+---#----#---
+---######---
+------------
+",
+    12,
+    11,
+);
+
+pub fn place_prefab(mb: &mut MapBuilder, rng: &mut RandomNumberGenerator) {
+    let mut placement = None;
+
+    let dijkstra_map = DijkstraMap::new(
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        &vec![mb.map.point2d_to_index(mb.player_start)],
+        &mb.map,
+        1024.0,
+    );
+
+    let mut attemps = 0;
+
+    while placement.is_none() && attemps < 10 {
+        let dimensions = Rect::with_size(
+            rng.range(0, SCREEN_WIDTH - FORTRESS.1),
+            rng.range(0, SCREEN_HEIGHT - FORTRESS.2),
+            FORTRESS.1,
+            FORTRESS.2,
+        );
+
+        let mut can_place = false;
+        dimensions.for_each(|pt| {
+            let idx = mb.map.point2d_to_index(pt);
+            let distance = dijkstra_map.map[idx];
+            if distance < 2000.0 && distance > 20.0 && mb.amulet_start != pt {
+                can_place = true;
+            }
+        });
+
+        if can_place {
+            placement = Some(Point::new(dimensions.x1, dimensions.y1));
+            let points = dimensions.point_set();
+            mb.monster_spawn.retain(|pt| !points.contains(pt));
+        }
+        attemps += 1;
+
+        if let Some(placement) = placement {
+            let fort_chars: Vec<char> = FORTRESS
+                .0
+                .chars()
+                .filter(|ch| *ch != '\r' && *ch != '\n')
+                .collect();
+
+            let mut char_pos = 0;
+            for fy in placement.y..placement.y + FORTRESS.2 {
+                for fx in placement.x..placement.x + FORTRESS.1 {
+                    let idx = map_idx(fx, fy);
+                    let ch = fort_chars[char_pos];
+                    match ch {
+                        'M' => {
+                            mb.map.tiles[idx] = TileType::Floor;
+                            mb.monster_spawn.push(Point::new(fx, fy));
+                        }
+                        '#' => mb.map.tiles[idx] = TileType::Wall,
+                        '-' => mb.map.tiles[idx] = TileType::Floor,
+                        _ => println!("IDK what {} is", ch),
+                    }
+                    char_pos += 1;
+                }
+            }
+        }
+    }
+}

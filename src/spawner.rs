@@ -63,3 +63,29 @@ pub fn spawn_amulet_yala(world: &mut World, pos: Point) {
         Name("Amulet of YALA".to_string()),
     ));
 }
+
+pub fn spawn_healing_potion(world: &mut World, pos: Point) {
+    world.push((
+        Item,
+        pos,
+        Render {
+            color: ColorPair::new(WHITE, BLACK),
+            glyph: to_cp437('!'),
+        },
+        Name("Health Potion".to_string()),
+        ProvidesHealing { amount: 6 },
+    ));
+}
+
+pub fn spawn_dungeon_map(world: &mut World, pos: Point) {
+    world.push((
+        Item,
+        pos,
+        Render {
+            color: ColorPair::new(WHITE, BLACK),
+            glyph: to_cp437('{'),
+        },
+        Name("Dungeon Map".to_string()),
+        ProvidesDungeonMap,
+    ));
+}
