@@ -39,7 +39,10 @@ pub fn map_render(
                         TileType::Wall => {
                             draw_batch.set(p - offset, ColorPair::new(tint, BLACK), to_cp437('#'));
                         }
-                    }
+                        TileType::Stairs => {
+                            draw_batch.set(p - offset, ColorPair::new(WHITE, BLACK), to_cp437('>'));
+                        }
+                    };
                 }
             }
         }

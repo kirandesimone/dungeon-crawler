@@ -7,7 +7,7 @@ use crate::prelude::*;
 pub fn spawn_player(world: &mut World, pos: Point) {
     // this will create an entity with these components
     world.push((
-        Player,
+        Player{map_level: 0},
         pos,
         Render {
             color: ColorPair::new(WHITE, BLACK),
@@ -90,4 +90,14 @@ pub fn spawn_dungeon_map(world: &mut World, pos: Point) {
         Name("Dungeon Map".to_string()),
         ProvidesDungeonMap
     ));
+}
+
+
+pub fn spawn_entity(world: &mut World, pos: Point, rng: &mut RandomNumberGenerator) {
+    let roll = rng.roll_dice(1, 6);
+    match roll {
+        1 => spawn_healing_potion(world, pos),
+        2 => spawn_dungeon_map(world, pos),
+        _ => spawn_enemy(world, pos, rng)
+    }
 }

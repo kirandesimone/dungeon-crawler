@@ -57,6 +57,7 @@ impl GameState for State {
                 .execute(&mut self.world, &mut self.resources),
             TurnState::GameOver => self.game_over(ctx),
             TurnState::Victory => self.victory(ctx),
+            TurnState::NextLevel => self.advance_level(),
         };
         render_draw_buffer(ctx).expect("Render Error");
     }
@@ -67,16 +68,15 @@ impl State {
         let mut world = World::default();
         let mut resources = Resources::default();
         let mut rng = RandomNumberGenerator::new();
-        let map_builder = MapBuilder::new(&mut rng);
+        let mut map_builder = MapBuilder::new(&mut rng);
         spawn_player(&mut world, map_builder.player_start);
-        spawn_amulet_yala(&mut world, map_builder.amulet_start);
+        //spawn_amulet_yala(&mut world, map_builder.amulet_start);
+        let stair_idx = map_builder.map.point2d_to_index(map_builder.amulet_start);
+        map_builder.map.tiles[stair_idx] = TileType::Stairs;
         map_builder
             .monster_spawn
             .iter()
-            .for_each(|pos| spawn_enemy(&mut world, *pos, &mut rng));
-        /*  map_builder.rooms.iter().skip(1).map(|r| r.center()).for_each(|pos| {
-            spawn_enemy(&mut world, pos, &mut rng);
-        }); */
+            .for_each(|pos| spawn_entity(&mut world, *pos, &mut rng));
         resources.insert(map_builder.map);
         resources.insert(Camera::new(map_builder.player_start));
         resources.insert(TurnState::AwaitingInput);
@@ -100,15 +100,7 @@ impl State {
         map_builder
             .monster_spawn
             .iter()
-            .for_each(|pos| spawn_enemy(&mut self.world, *pos, &mut rng));
-        /*  map_builder
-        .rooms
-        .iter()
-        .skip(1)
-        .map(|room| room.center())
-        .for_each(|room_center| {
-            spawn_enemy(&mut self.world, room_center, &mut rng);
-        }); */
+            .for_each(|pos| spawn_entity(&mut self.world, *pos, &mut rng));
         self.resources.insert(map_builder.map);
         self.resources.insert(Camera::new(map_builder.player_start));
         self.resources.insert(TurnState::AwaitingInput);
@@ -134,6 +126,62 @@ impl State {
         if let Some(VirtualKeyCode::Key1) = ctx.key {
             self.reset();
         }
+    }
+
+    fn advance_level(&mut self) {
+        let player_entity = *<Entity>::query().filter(component::<Player>())
+            .iter(&self.world)
+            .nth(0)
+            .unwrap();
+        use std::collections::HashSet;
+        let mut entities_to_retain: HashSet<Entity> = HashSet::new();
+        entities_to_retain.insert(player_entity);
+
+        <(Entity, &Carried)>::query()
+            .iter(&self.world)
+            .filter(|(_, carried)| carried.0 == player_entity)
+            .map(|(entity, _)| *entity)
+            .for_each(|entity| {entities_to_retain.insert(entity);});
+
+        let mut commands = CommandBuffer::new(&self.world);
+        for e in Entity::query().iter(&self.world) {
+            if !entities_to_retain.contains(e) {
+                commands.remove(*e);
+            }
+        }
+        commands.flush(&mut self.world, &mut self.resources);
+
+        <&mut FieldOfView>::query()
+            .iter_mut(&mut self.world)
+            .for_each(|fov| fov.is_dirty = true);
+        
+        let mut rng = RandomNumberGenerator::new();
+        let mut map_builder = MapBuilder::new(&mut rng);
+
+        let mut map_level = 0;
+        <(&mut Player, &mut Point)>::query()
+            .iter_mut(&mut self.world)
+            .for_each(|(player, pos)| {
+                player.map_level += 1;
+                map_level = player.map_level;
+                pos.x = map_builder.player_start.x;
+                pos.y = map_builder.player_start.y;
+            });
+
+        if map_level == 2 {
+            spawn_amulet_yala(&mut self.world, map_builder.amulet_start);
+        } else {
+            let idx = map_builder.map.point2d_to_index(map_builder.amulet_start);
+            map_builder.map.tiles[idx] = TileType::Stairs;
+        }
+
+        map_builder.monster_spawn.iter().for_each(|pos| {
+            spawn_entity(&mut self.world, *pos, &mut rng)
+        });
+        self.resources.insert(map_builder.map);
+        self.resources.insert(Camera::new(map_builder.player_start));
+        self.resources.insert(TurnState::AwaitingInput);
+        self.resources.insert(map_builder.theme);
     }
 }
 

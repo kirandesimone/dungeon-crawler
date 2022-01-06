@@ -5,6 +5,8 @@ use crate::prelude::*;
 #[read_component(Player)]
 #[read_component(Enemy)]
 #[write_component(Health)]
+#[read_component(Item)]
+#[read_component(Carried)]
 pub fn player_input(
     sub_world: &mut SubWorld,
     commands: &mut CommandBuffer,
@@ -18,6 +20,28 @@ pub fn player_input(
             VirtualKeyCode::D => Point::new(1, 0),
             VirtualKeyCode::S => Point::new(0, 1),
             VirtualKeyCode::A => Point::new(-1, 0),
+            VirtualKeyCode::G => {
+                let (player, player_pos) = players
+                    .iter(sub_world)
+                    .find_map(|(entity, pos)| Some((*entity, *pos))).unwrap();
+                let mut items = <(Entity, &Point, &Item)>::query();
+                items.iter(sub_world)
+                    .filter(|(_entity, &item_pos, _item)| item_pos == player_pos)
+                    .for_each(|(entity, _item_pos, _item)| {
+                        commands.remove_component::<Point>(*entity);
+                        commands.add_component(*entity, Carried(player));
+                    });
+                Point::new(0, 0)
+            }
+            VirtualKeyCode::Key1 => use_item(sub_world, 0, commands),
+            VirtualKeyCode::Key2 => use_item(sub_world, 1, commands),
+            VirtualKeyCode::Key3 => use_item(sub_world, 2, commands),
+            VirtualKeyCode::Key4 => use_item(sub_world, 3, commands),
+            VirtualKeyCode::Key5 => use_item(sub_world, 4, commands),
+            VirtualKeyCode::Key6 => use_item(sub_world, 5, commands),
+            VirtualKeyCode::Key7 => use_item(sub_world, 6, commands),
+            VirtualKeyCode::Key8 => use_item(sub_world, 7, commands),
+            VirtualKeyCode::Key9 => use_item(sub_world, 8, commands),
             _ => Point::zero(),
         };
 
@@ -45,7 +69,6 @@ pub fn player_input(
                 });
 
             if !hit_something {
-                did_something = true;
                 commands.push((
                     (),
                     WantsToMove {
@@ -54,17 +77,34 @@ pub fn player_input(
                     },
                 ));
             }
-
-            if !did_something {
-                if let Ok(mut player_health) = sub_world
-                    .entry_mut(player_entity)
-                    .unwrap()
-                    .get_component_mut::<Health>()
-                {
-                    player_health.current = i32::min(player_health.max, player_health.current + 1);
-                }
-            }
             *turn_state = TurnState::PlayerTurn;
         }
     }
+}
+
+
+fn use_item(sub_world: &mut SubWorld, n: usize, commands: &mut CommandBuffer) -> Point {
+    let player_entity = <(Entity, &Player)>::query()
+        .iter(sub_world)
+        .find_map(|(entity, _player)| Some(*entity))
+        .unwrap();
+
+    let carried_items = <(Entity, &Carried, &Item)>::query()
+        .iter(sub_world)
+        .filter(|(_, carried, _)| carried.0 == player_entity)
+        .enumerate()
+        .filter(|(item_pos, (_, _, _))| *item_pos == n)
+        .find_map(|(_, (entity, _, _))| Some(*entity));
+
+        if let Some(item) = carried_items {
+            commands.push((
+                (),
+                ActivateItem {
+                    used_by: player_entity,
+                    item
+                }
+            ));
+        }
+
+        Point::zero()
 }
