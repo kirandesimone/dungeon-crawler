@@ -2,7 +2,9 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Player;
+pub struct Player {
+    pub map_level: u32
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Enemy;
@@ -77,3 +79,13 @@ pub struct ProvidesHealing {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ProvidesDungeonMap;
+
+
+#[derive(Clone, PartialEq)]
+pub struct Carried(pub Entity);
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct ActivateItem {
+    pub used_by: Entity,
+    pub item: Entity
+}
