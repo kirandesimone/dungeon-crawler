@@ -5,7 +5,11 @@ use crate::prelude::*;
 #[read_component(ProvidesDungeonMap)]
 #[write_component(Health)]
 #[read_component(ActivateItem)]
-pub fn use_items(sub_world: &mut SubWorld, commands: &mut CommandBuffer, #[resource] map: &mut Map) {
+pub fn use_items(
+    sub_world: &mut SubWorld,
+    commands: &mut CommandBuffer,
+    #[resource] map: &mut Map,
+) {
     let mut healing_queue: Vec<(Entity, i32)> = Vec::new();
 
     <(Entity, &ActivateItem)>::query()
@@ -25,7 +29,7 @@ pub fn use_items(sub_world: &mut SubWorld, commands: &mut CommandBuffer, #[resou
             commands.remove(active_item.item);
             commands.remove(*entity);
         });
-    
+
     for heals in healing_queue.iter() {
         if let Ok(mut target) = sub_world.entry_mut(heals.0) {
             if let Ok(health) = target.get_component_mut::<Health>() {

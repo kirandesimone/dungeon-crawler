@@ -7,6 +7,7 @@ use crate::prelude::*;
 #[write_component(Health)]
 #[read_component(Item)]
 #[read_component(Carried)]
+#[read_component(Weapon)]
 pub fn player_input(
     sub_world: &mut SubWorld,
     commands: &mut CommandBuffer,
@@ -23,13 +24,24 @@ pub fn player_input(
             VirtualKeyCode::G => {
                 let (player, player_pos) = players
                     .iter(sub_world)
-                    .find_map(|(entity, pos)| Some((*entity, *pos))).unwrap();
+                    .find_map(|(entity, pos)| Some((*entity, *pos)))
+                    .unwrap();
                 let mut items = <(Entity, &Point, &Item)>::query();
-                items.iter(sub_world)
+                items
+                    .iter(sub_world)
                     .filter(|(_entity, &item_pos, _item)| item_pos == player_pos)
                     .for_each(|(entity, _item_pos, _item)| {
                         commands.remove_component::<Point>(*entity);
                         commands.add_component(*entity, Carried(player));
+
+                        if let Ok(e) = sub_world.entry_ref(*entity) {
+                            if e.get_component::<Weapon>().is_ok() {
+                                <(Entity, &Carried, &Weapon)>::query()
+                                    .iter(sub_world)
+                                    .filter(|(_, carried, _)| carried.0 == player)
+                                    .for_each(|(e, _c, _w)| commands.remove(*e));
+                            }
+                        }
                     });
                 Point::new(0, 0)
             }
@@ -82,7 +94,6 @@ pub fn player_input(
     }
 }
 
-
 fn use_item(sub_world: &mut SubWorld, n: usize, commands: &mut CommandBuffer) -> Point {
     let player_entity = <(Entity, &Player)>::query()
         .iter(sub_world)
@@ -96,15 +107,15 @@ fn use_item(sub_world: &mut SubWorld, n: usize, commands: &mut CommandBuffer) ->
         .filter(|(item_pos, (_, _, _))| *item_pos == n)
         .find_map(|(_, (entity, _, _))| Some(*entity));
 
-        if let Some(item) = carried_items {
-            commands.push((
-                (),
-                ActivateItem {
-                    used_by: player_entity,
-                    item
-                }
-            ));
-        }
+    if let Some(item) = carried_items {
+        commands.push((
+            (),
+            ActivateItem {
+                used_by: player_entity,
+                item,
+            },
+        ));
+    }
 
-        Point::zero()
+    Point::zero()
 }
