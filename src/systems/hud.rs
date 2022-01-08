@@ -13,23 +13,22 @@ pub fn display_hud(sub_world: &SubWorld) {
     let mut draw_batch = DrawBatch::new();
     draw_batch.target(2);
     draw_batch.print_centered(1, "Explore the dungeon with WASD");
-    let green_health = HSV {
-        h: 149.0,
-        s: 67.0,
-        v: 76.0,
-    };
+    draw_batch.print_centered(2, "Pick up items with G");
 
+    let green_health = RGB::from_u8(34, 139, 34);
+    let red_health = RGB::from_u8(174, 34, 34);
+    let percent = player_health.current as f32 / player_health.max as f32;
     draw_batch.bar_horizontal(
         Point::zero(),
         SCREEN_WIDTH * 2,
         player_health.current,
         player_health.max,
-        ColorPair::new(green_health.to_rgba(1.0), BLACK),
+        ColorPair::new(red_health.lerp(green_health, percent), BLACK),
     );
     draw_batch.print_color_centered(
         0,
         format!("Health: {} / {}", player_health.current, player_health.max),
-        ColorPair::new(WHITE, RED),
+        ColorPair::new(WHITE, red_health),
     );
 
     let (_player, map_level) = <(Entity, &Player)>::query()
