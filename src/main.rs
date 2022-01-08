@@ -73,10 +73,13 @@ impl State {
         //spawn_amulet_yala(&mut world, map_builder.amulet_start);
         let stair_idx = map_builder.map.point2d_to_index(map_builder.amulet_start);
         map_builder.map.tiles[stair_idx] = TileType::Stairs;
-        map_builder
-            .monster_spawn
-            .iter()
-            .for_each(|pos| spawn_entity(&mut world, *pos, &mut rng));
+        spawn_level(
+            &mut world,
+            &mut rng,
+            0,
+            &map_builder.monster_spawn,
+            &mut &mut resources,
+        );
         resources.insert(map_builder.map);
         resources.insert(Camera::new(map_builder.player_start));
         resources.insert(TurnState::AwaitingInput);
@@ -97,10 +100,13 @@ impl State {
         let map_builder = MapBuilder::new(&mut rng);
         spawn_player(&mut self.world, map_builder.player_start);
         spawn_amulet_yala(&mut self.world, map_builder.amulet_start);
-        map_builder
-            .monster_spawn
-            .iter()
-            .for_each(|pos| spawn_entity(&mut self.world, *pos, &mut rng));
+        spawn_level(
+            &mut self.world,
+            &mut rng,
+            0,
+            &map_builder.monster_spawn,
+            &mut self.resources,
+        );
         self.resources.insert(map_builder.map);
         self.resources.insert(Camera::new(map_builder.player_start));
         self.resources.insert(TurnState::AwaitingInput);
@@ -129,7 +135,8 @@ impl State {
     }
 
     fn advance_level(&mut self) {
-        let player_entity = *<Entity>::query().filter(component::<Player>())
+        let player_entity = *<Entity>::query()
+            .filter(component::<Player>())
             .iter(&self.world)
             .nth(0)
             .unwrap();
@@ -141,7 +148,9 @@ impl State {
             .iter(&self.world)
             .filter(|(_, carried)| carried.0 == player_entity)
             .map(|(entity, _)| *entity)
-            .for_each(|entity| {entities_to_retain.insert(entity);});
+            .for_each(|entity| {
+                entities_to_retain.insert(entity);
+            });
 
         let mut commands = CommandBuffer::new(&self.world);
         for e in Entity::query().iter(&self.world) {
@@ -154,7 +163,7 @@ impl State {
         <&mut FieldOfView>::query()
             .iter_mut(&mut self.world)
             .for_each(|fov| fov.is_dirty = true);
-        
+
         let mut rng = RandomNumberGenerator::new();
         let mut map_builder = MapBuilder::new(&mut rng);
 
@@ -175,9 +184,13 @@ impl State {
             map_builder.map.tiles[idx] = TileType::Stairs;
         }
 
-        map_builder.monster_spawn.iter().for_each(|pos| {
-            spawn_entity(&mut self.world, *pos, &mut rng)
-        });
+        spawn_level(
+            &mut self.world,
+            &mut rng,
+            map_level as usize,
+            &map_builder.monster_spawn,
+            &mut self.resources,
+        );
         self.resources.insert(map_builder.map);
         self.resources.insert(Camera::new(map_builder.player_start));
         self.resources.insert(TurnState::AwaitingInput);
