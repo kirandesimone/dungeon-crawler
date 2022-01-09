@@ -29,7 +29,11 @@ pub fn player_input(
                 let mut items = <(Entity, &Point, &Item)>::query();
                 items
                     .iter(sub_world)
-                    .filter(|(_entity, &item_pos, _item)| item_pos == player_pos)
+                    .filter(|(_entity, &item_pos, _item)| {
+                        let x = player_pos.x - item_pos.x;
+                        let y = player_pos.y - item_pos.y;
+                        x+y == 1 // magnitude
+                    })
                     .for_each(|(entity, _item_pos, _item)| {
                         commands.remove_component::<Point>(*entity);
                         commands.add_component(*entity, Carried(player));

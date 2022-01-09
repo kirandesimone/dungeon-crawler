@@ -46,7 +46,6 @@ pub fn combat(sub_world: &mut SubWorld, commands: &mut CommandBuffer) {
             if health.current < 1 && !is_player {
                 commands.remove(*victim);
             }
-            println!("Health after attack: {}", health.current);
         }
         commands.remove(*message);
     });
