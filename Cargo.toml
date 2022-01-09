@@ -10,3 +10,7 @@ bracket-lib = "~0.8.1"
 legion = "=0.4.0"
 serde = { version = "=1.0.133" }
 ron = "=0.7.0"
+
+
+[profile.release]
+lto = "thin"
