@@ -12,7 +12,7 @@ pub struct Enemy;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Render {
     pub color: ColorPair,
-    pub glyph: FontCharType,
+    pub glyph: u16,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

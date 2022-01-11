@@ -31,16 +31,16 @@ pub fn map_render(
 
                     let glyph = theme.tile_to_render(map.tiles[idx]);
 
-                    draw_batch.set(p - offset, ColorPair::new(tint, BLACK), glyph);
+                    //draw_batch.set(p - offset, ColorPair::new(tint, BLACK), glyph);
                     match map.tiles[idx] {
                         TileType::Floor => {
-                            draw_batch.set(p - offset, ColorPair::new(tint, BLACK), to_cp437('.'));
+                            draw_batch.set(p - offset, ColorPair::new(tint, BLACK), glyph);
                         }
                         TileType::Wall => {
-                            draw_batch.set(p - offset, ColorPair::new(tint, BLACK), to_cp437('#'));
+                            draw_batch.set(p - offset, ColorPair::new(tint, BLACK), glyph);
                         }
                         TileType::Stairs => {
-                            draw_batch.set(p - offset, ColorPair::new(WHITE, BLACK), to_cp437('>'));
+                            draw_batch.set(p - offset, ColorPair::new(WHITE, BLACK), glyph);
                         }
                     };
                 }

@@ -57,6 +57,7 @@ impl GameState for State {
                 .execute(&mut self.world, &mut self.resources),
             TurnState::GameOver => self.game_over(ctx),
             TurnState::Victory => self.victory(ctx),
+            TurnState::MainMenu => self.main_menu(ctx),
             TurnState::NextLevel => self.advance_level(),
         };
         render_draw_buffer(ctx).expect("Render Error");
@@ -70,7 +71,6 @@ impl State {
         let mut rng = RandomNumberGenerator::new();
         let mut map_builder = MapBuilder::new(&mut rng);
         spawn_player(&mut world, map_builder.player_start);
-        //spawn_amulet_yala(&mut world, map_builder.amulet_start);
         let stair_idx = map_builder.map.point2d_to_index(map_builder.amulet_start);
         map_builder.map.tiles[stair_idx] = TileType::Stairs;
         spawn_level(
@@ -82,7 +82,7 @@ impl State {
         );
         resources.insert(map_builder.map);
         resources.insert(Camera::new(map_builder.player_start));
-        resources.insert(TurnState::AwaitingInput);
+        resources.insert(TurnState::MainMenu);
         resources.insert(map_builder.theme);
         Self {
             world,
@@ -131,6 +131,16 @@ impl State {
         ctx.print_color_centered(9, GREEN, BLACK, "Press 1 to Play Again");
         if let Some(VirtualKeyCode::Key1) = ctx.key {
             self.reset();
+        }
+    }
+
+    fn main_menu(&mut self, ctx: &mut BTerm) {
+        ctx.set_active_console(2);
+        ctx.print_color_centered(15, WHITE, BLACK, "Dungeon");
+        ctx.print_color_centered(17,WHITE, BLACK, "Press Enter");
+        if let Some(VirtualKeyCode::Return) = ctx.key {
+            ctx.cls();
+            self.resources.insert(TurnState::AwaitingInput);
         }
     }
 
@@ -212,6 +222,5 @@ fn main() -> BError {
         .with_simple_console_no_bg(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2, "terminal8x8.png")
         .build()?;
 
-    let gamestate = State::new();
-    main_loop(ctx, gamestate)
+    main_loop(ctx, State::new())
 }

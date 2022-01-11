@@ -5,5 +5,6 @@ pub enum TurnState {
     EnemyTurn,
     GameOver,
     Victory,
+    MainMenu,
     NextLevel,
 }
